@@ -2,23 +2,17 @@ import run from "aocrunner";
 import _ from 'lodash'
 
 
-const parseInput = (rawInput: string) => 
+const parseInput = (rawInput: string) : number[][] => 
 {
-    return rawInput.split("\n\n").map((s) => s.split("\n").map( (n) => parseInt(n)))
+    return _(rawInput.split("\n\n")).map((s:string) => s.split("\n").map( (n:string) => parseInt(n))).value();
 }
 
-const part1 = (rawInput: string) => {
-    const input = parseInput(rawInput);
-    const sums = input.map((arr) => _.sum(arr))
-    const max = _.max(sums);
-    return max;
+const part1 = (rawInput: string) : number => {
+    return _(parseInput(rawInput)).map((arr:number[]) => _.sum(arr)).max()||0;
 };
 
-const part2 = (rawInput: string) => {
-    const input = parseInput(rawInput);
-    const sums = input.map((arr) => _.sum(arr));
-    sums.sort((a, b) => b-a);
-    return _.sum(sums.slice(0, 3));
+const part2 = (rawInput: string) : number => {
+    return _(parseInput(rawInput)).map((arr) => _.sum(arr)).sort((a, b) => b-a).slice(0, 3).sum();
 };
 
 run({
