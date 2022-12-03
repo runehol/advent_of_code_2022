@@ -1,7 +1,8 @@
 import run from "aocrunner";
 import _ from 'lodash';
 
-const parseInput = (rawInput: string) => rawInput;
+const parseInput = (rawInput: string) => 
+{}
 
 const part1 = (rawInput: string) => {
     const input = parseInput(rawInput);
@@ -19,8 +20,8 @@ run({
     part1: {
         tests: [
             // {
-            //   input: ``,
-            //   expected: "",
+            //     input: ``,
+            //     expected: "",
             // },
         ],
         solution: part1,
@@ -28,8 +29,8 @@ run({
     part2: {
         tests: [
             // {
-            //   input: ``,
-            //   expected: "",
+            //     input: ``,
+            //     expected: "",
             // },
         ],
         solution: part2,
