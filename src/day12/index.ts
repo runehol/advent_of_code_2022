@@ -39,9 +39,9 @@ const parseInput = (rawInput: string) : Terrain =>
         } else if(c == 'E')
         {
             end = [y, x];
-            return 26;
+            return 25;
         }
-        return c.charCodeAt(0)-96;
+        return c.charCodeAt(0)-'a'.charCodeAt(0);
     }));
     return { raw_map: rawInput, start, end, heights }
 }
@@ -179,7 +179,7 @@ const find_route = (map: Terrain, starts: Position[]) : number =>
     console.log(map.raw_map);
     console.log();
     console.log(build_path_illustration(map, path));
-    */
+  */  
     return path.length-1;
 
 }
@@ -195,7 +195,7 @@ const part2 = (rawInput: string) => {
     const map = parseInput(rawInput);
     const all_starts: Position[] = [];
     map.heights.forEach((row, y) => row.forEach((h, x) => {
-        if(h == 1)
+        if(h == 0)
         {
             all_starts.push([y, x]);
         }
