@@ -18,7 +18,6 @@ const parseInput = (rawInput: string) : Pair[] =>
         });
 }
 
-const promote_to_array = (v:number) => new Array(1).fill(v);
 
 const ordered = (left: any, right: any) : number =>
 {
@@ -30,8 +29,8 @@ const ordered = (left: any, right: any) : number =>
         if(left > right) return 1;
         return 0;
     }
-    if(left_is_num) return ordered(promote_to_array(left), right);
-    if(right_is_num) return ordered(left, promote_to_array(right));
+    if(left_is_num) return ordered([left], right);
+    if(right_is_num) return ordered(left, [right]);
 
     //finally, both are arrays
     for(let i = 0; i < Math.max(left.length, right.length); ++i)
