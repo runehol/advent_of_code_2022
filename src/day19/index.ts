@@ -1,5 +1,5 @@
 import run from "aocrunner";
-import { assert, time } from "console";
+import { assert } from "console";
 import _ from 'lodash';
 
 
@@ -75,14 +75,6 @@ const next_build_time = (robots: number[], resources: number[], required: number
     return time;
 }
 
-const is_dominated_by = (a: number[], b: number[]) : boolean =>
-{
-    for(let i = 0; i< a.length; ++i)
-    {
-        if(a[i] > b[i]) return false;
-    }
-    return true;
-}
 
 const search = (start_time_left: number, blueprint: Blueprint) : number => 
 {
@@ -103,7 +95,6 @@ const search = (start_time_left: number, blueprint: Blueprint) : number =>
 
         if(best > absolute_best)
         {
-            console.log("resources at end", resources_at_end, "robots", robots);
             absolute_best = best;
         }
 
@@ -113,7 +104,6 @@ const search = (start_time_left: number, blueprint: Blueprint) : number =>
         {
             const r = blueprint.robot_costs[i];
             let next_time = next_build_time(robots, resources, r);
-            //console.log(normalised_time, "can build robot", resource_names[i], "in", next_time)
             if(next_time < time_left)
             {
                 // we can build it
@@ -134,9 +124,7 @@ const search = (start_time_left: number, blueprint: Blueprint) : number =>
 const part1 = (rawInput: string) => {
     const blueprints = parseInput(rawInput);
     let gd = blueprints.map(bp => {
-        console.log(bp);
         let geodes = search(24, bp);
-        console.log(geodes);
         return geodes*bp.id;
     })
     return _.sum(gd);
@@ -145,9 +133,7 @@ const part1 = (rawInput: string) => {
 const part2 = (rawInput: string) => {
     const blueprints = parseInput(rawInput).slice(0, 3);
     let gd = blueprints.map(bp => {
-        console.log(bp);
         let geodes = search(32, bp);
-        console.log(geodes);
         return geodes;
     })
     let prod = 1;
@@ -170,11 +156,6 @@ Blueprint 2: Each ore robot costs 2 ore. Each clay robot costs 3 ore. Each obsid
     },
     part2: {
         tests: [
-            {
-                input: `Blueprint 1: Each ore robot costs 4 ore. Each clay robot costs 2 ore. Each obsidian robot costs 3 ore and 14 clay. Each geode robot costs 2 ore and 7 obsidian.
-Blueprint 2: Each ore robot costs 2 ore. Each clay robot costs 3 ore. Each obsidian robot costs 3 ore and 8 clay. Each geode robot costs 3 ore and 12 obsidian.`,
-                expected: 56*62,
-            },
         ],
         solution: part2,
     },
