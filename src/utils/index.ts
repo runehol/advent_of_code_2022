@@ -29,3 +29,8 @@
  *     import { myUtil } from '../utils'
  *
  */
+
+export const integers_from_string = (str: string) : number[] => {
+    const regexp = /-?\d+/g;
+    return [...str.matchAll(regexp)].map(m => parseInt(m[0]))
+}
