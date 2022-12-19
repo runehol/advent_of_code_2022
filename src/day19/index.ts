@@ -1,5 +1,5 @@
 import run from "aocrunner";
-import { time } from "console";
+import { assert, time } from "console";
 import _ from 'lodash';
 
 
@@ -16,6 +16,28 @@ interface Blueprint
     robot_costs: number[][];
 }
 
+const add = (a: number[], b: number[]) : number[] =>
+{
+    assert(a.length === b.length);
+    return a.map((av, idx) => av + b[idx]);
+}
+
+const sub = (a: number[], b: number[]) : number[] =>
+{
+    assert(a.length === b.length);
+    return a.map((av, idx) => av - b[idx]);
+}
+const scale = (a: number[], s: number) : number[] => 
+{
+    return a.map(v => v*s);
+}
+
+const scaled_add = (a: number[], b: number[], s: number) : number[] =>
+{
+    return add(a, scale(b, s));
+}
+
+
 const parseInput = (rawInput: string) : Blueprint[] => 
 {
     return rawInput.split("\n").map(ln => {
@@ -26,48 +48,80 @@ const parseInput = (rawInput: string) : Blueprint[] =>
                 [ints[1], 0, 0, 0],
                 [ints[2], 0, 0, 0],
                 [ints[3], ints[4], 0, 0],
-                [ints[5], 0, ints[5], 0]
+                [ints[5], 0, ints[6], 0]
             ]
         }
     })
 }
 
-const search = (time_left: number, robots: number[], resources: number[], blueprint: Blueprint) : number =>
+const next_build_time = (robots: number[], resources: number[], required: number[]) : number =>
 {
-    if(time_left == 0)
+    let time = 0;
+    for(let idx = 0; idx < robots.length; ++idx)
     {
-        //console.log(time_left, robots, resources, blueprint);
-        return resources[3];
-    } 
-    const next_resources = [resources[0] + robots[0], resources[1] + robots[1], resources[2] + robots[2], resources[3] + robots[3]];
-
-    // now consider building one of the robots
-    let best = 0;
-    for(let i = blueprint.robot_costs.length-1; i >= 0; --i)
-    {
-        const r = blueprint.robot_costs[i];
-        if(r[0] <= resources[0] && r[1] <= resources[1] && r[2] <= resources[2] && r[3] <= resources[3])
+        const diff = required[idx] - resources[idx]
+        if(required[idx] == 0 || diff <= 0)
         {
-            //console.log(24-time_left, "can build robot collecting", resource_names[i], robots, resources);
-            const next_resources_without_robot = [next_resources[0] - r[0], next_resources[1] - r[1], next_resources[2] - r[2], next_resources[3] - r[3]];
-            const next_robots = robots.slice();
-            next_robots[i] += 1;
-            best = Math.max(best, search(time_left-1, next_robots, next_resources_without_robot, blueprint))
-            //break;
+            // all good
+        }
+        else if(robots[idx] > 0)
+        {
+            time = Math.max(time, Math.ceil(diff/robots[idx]))
+        } else {
+            // cannot be built
+            return 1000000000;
         }
     }
-    //if(best == 0)
-    {
-        best = Math.max(best, search(time_left-1, robots, next_resources, blueprint)); // do nothing, just tick down the time
-    }
-    return best;
+    return time;
 }
+
+const search = (start_time_left: number, blueprint: Blueprint) : number => 
+{
+    let absolute_best = 0;
+    const search_inner = (time_left: number, robots: number[], resources: number[], trace: string) : number =>
+    {
+        assert(time_left >= 0);
+        let normalised_time = start_time_left + 1 - time_left;
+        let resources_at_end = scaled_add(resources, robots, time_left);
+        let best = resources_at_end[3]; // do nothing alternative
+        if(best > absolute_best)
+        {
+            console.log(trace);
+            console.log("resources at end", resources_at_end, "robots", robots);
+            absolute_best = best;
+        }
+
+        //now let's look for when we can build robots
+        //for(let i = blueprint.robot_costs.length-1; i >= 0; --i)
+        for(let i = 0; i < blueprint.robot_costs.length; ++i)
+        {
+            const r = blueprint.robot_costs[i];
+            let next_time = next_build_time(robots, resources, r);
+            //console.log(normalised_time, "can build robot", resource_names[i], "in", next_time)
+            if(next_time < time_left)
+            {
+                // we can build it
+                let step = next_time + 1; // make sure we step one past so we don't build twice in the same time slot
+                let new_time_left = time_left - step;
+                let new_robots = robots.slice();
+                new_robots[i]++;
+                const new_trace = trace + `${normalised_time+step-1} build robot collecting ${resource_names[i]}\n`
+                //console.log(normalised_time+step-1, "build robot collecting", resource_names[i], robots, scaled_add(resources, robots, next_time), r);
+                best = Math.max(best, search_inner(time_left - step, new_robots, sub(scaled_add(resources, robots, step), r), new_trace));
+            }
+        }
+        return best;
+    }
+    return search_inner(start_time_left, [1, 0, 0, 0], [0, 0, 0, 0], "");
+}
+
+
 
 const part1 = (rawInput: string) => {
     const blueprints = parseInput(rawInput);
     let gd = blueprints.map(bp => {
         console.log(bp);
-        let geodes = search(23, [1, 0, 0, 0], [0, 0, 0, 0], bp);
+        let geodes = search(24, bp);
         console.log(geodes);
         return geodes*bp.id;
     })
