@@ -75,25 +75,41 @@ const next_build_time = (robots: number[], resources: number[], required: number
     return time;
 }
 
+const is_dominated_by = (a: number[], b: number[]) : boolean =>
+{
+    for(let i = 0; i< a.length; ++i)
+    {
+        if(a[i] > b[i]) return false;
+    }
+    return true;
+}
+
 const search = (start_time_left: number, blueprint: Blueprint) : number => 
 {
     let absolute_best = 0;
-    const search_inner = (time_left: number, robots: number[], resources: number[], trace: string) : number =>
+    const frontier = new Map<number, number>();
+    const search_inner = (time_left: number, robots: number[], resources: number[]) : number =>
     {
         assert(time_left >= 0);
-        let normalised_time = start_time_left + 1 - time_left;
         let resources_at_end = scaled_add(resources, robots, time_left);
+
         let best = resources_at_end[3]; // do nothing alternative
+        const curr_frontier = frontier.get(time_left);
+        if(curr_frontier !== undefined && best < curr_frontier)
+        {
+            return best;
+        }
+        frontier.set(time_left, best);
+
         if(best > absolute_best)
         {
-            console.log(trace);
             console.log("resources at end", resources_at_end, "robots", robots);
             absolute_best = best;
         }
 
+        let normalised_time = start_time_left + 1 - time_left;
         //now let's look for when we can build robots
-        //for(let i = blueprint.robot_costs.length-1; i >= 0; --i)
-        for(let i = 0; i < blueprint.robot_costs.length; ++i)
+        for(let i = blueprint.robot_costs.length-1; i >= 0; --i)
         {
             const r = blueprint.robot_costs[i];
             let next_time = next_build_time(robots, resources, r);
@@ -105,14 +121,12 @@ const search = (start_time_left: number, blueprint: Blueprint) : number =>
                 let new_time_left = time_left - step;
                 let new_robots = robots.slice();
                 new_robots[i]++;
-                const new_trace = trace + `${normalised_time+step-1} build robot collecting ${resource_names[i]}\n`
-                //console.log(normalised_time+step-1, "build robot collecting", resource_names[i], robots, scaled_add(resources, robots, next_time), r);
-                best = Math.max(best, search_inner(time_left - step, new_robots, sub(scaled_add(resources, robots, step), r), new_trace));
+                best = Math.max(best, search_inner(time_left - step, new_robots, sub(scaled_add(resources, robots, step), r)));
             }
         }
         return best;
     }
-    return search_inner(start_time_left, [1, 0, 0, 0], [0, 0, 0, 0], "");
+    return search_inner(start_time_left, [1, 0, 0, 0], [0, 0, 0, 0]);
 }
 
 
@@ -129,9 +143,18 @@ const part1 = (rawInput: string) => {
 };
 
 const part2 = (rawInput: string) => {
-    const input = parseInput(rawInput);
-
-    return;
+    const blueprints = parseInput(rawInput).slice(0, 3);
+    let gd = blueprints.map(bp => {
+        console.log(bp);
+        let geodes = search(32, bp);
+        console.log(geodes);
+        return geodes;
+    })
+    let prod = 1;
+    gd.forEach(element => {
+        prod *= element;
+    });
+    return prod;
 };
 
 run({
@@ -147,13 +170,14 @@ Blueprint 2: Each ore robot costs 2 ore. Each clay robot costs 3 ore. Each obsid
     },
     part2: {
         tests: [
-            //{
-            //    input: ``,
-            //    expected: "",
-            //},
+            {
+                input: `Blueprint 1: Each ore robot costs 4 ore. Each clay robot costs 2 ore. Each obsidian robot costs 3 ore and 14 clay. Each geode robot costs 2 ore and 7 obsidian.
+Blueprint 2: Each ore robot costs 2 ore. Each clay robot costs 3 ore. Each obsidian robot costs 3 ore and 8 clay. Each geode robot costs 3 ore and 12 obsidian.`,
+                expected: 56*62,
+            },
         ],
         solution: part2,
     },
     trimTestInputs: true,
-    onlyTests: true,
+    onlyTests: false,
 });
