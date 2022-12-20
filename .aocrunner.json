@@ -289,11 +289,12 @@
     {
       "part1": {
         "solved": false,
-        "result": "11388",
+        "result": "-8373",
         "attempts": [
-          "11388"
+          "11388",
+          "-8373"
         ],
-        "time": 184.591291
+        "time": 90.157583
       },
       "part2": {
         "solved": false,
