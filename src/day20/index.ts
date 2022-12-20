@@ -21,8 +21,9 @@ interface Element
 
 interface Sequence
 {
-    lookup: Map<number, Element>;
-    values: number[];
+    values: Element[];
+    zero_element: Element;
+    len: number;
 }
 
 const link = (before: Element, new_elem: Element) : void =>
@@ -56,7 +57,7 @@ const delink = (elem: Element) : Element =>
 
 const validate_sequence = (seq: Sequence) =>
 {
-    Array.from(seq.lookup.values()).forEach(elem => {
+    seq.values.forEach(elem => {
         assert(elem.next !== elem);
         assert(elem.prev !== elem);
         assert(elem.next.prev === elem);
@@ -64,28 +65,32 @@ const validate_sequence = (seq: Sequence) =>
     })
 }
 
-const parseInput = (rawInput: string) : Sequence => 
+
+const to_sequence = (ints: number[]) : Sequence =>
 {
-    const values = integers_from_string(rawInput);
-    const lookup = new Map<number, Element>();
-    let prev : Element|null = null;
-    for(let v of values)
+    let zero_element : Element|null = null;
+    let values: Element[] = []
+    for(let v of ints)
     {
         let tmp : NullableElement = { prev: null, next: null, value: v }
         tmp.prev = tmp;
         tmp.next = tmp;
         let elem = tmp as Element;
-        lookup.set(v, elem);
-        if(prev !== null)
+        if(values.length > 0)
         {
-            link(prev, elem);
+            link(values[values.length-1], elem);
         }
-        prev = elem;
+        values.push(elem);
+        if(v === 0) zero_element = elem;
     }
     let v2 = values.slice();
-    v2.sort();
-    console.log(v2);
-    return { lookup, values }
+    if(zero_element === null) throw "amiga";
+    return { values, zero_element, len: values.length }
+}
+
+const parseInput = (rawInput: string) : number[] => 
+{
+    return integers_from_string(rawInput);
 }
 
 const to_arr_elem = (start: Element) : number[] =>
@@ -106,13 +111,17 @@ const to_arr_elem = (start: Element) : number[] =>
 
 const to_arr = (seq: Sequence) : number[] => 
 {
-    const start = seq.lookup.get(0);
-    if(start === undefined) throw "zomg2";
-    return to_arr_elem(start);
+    return to_arr_elem(seq.zero_element);
 }
 
-const step_by = (elem: Element, step: number) : Element =>
+const step_by = (seq: Sequence, elem: Element, step: number) : Element =>
 {
+    
+    const wrap = seq.len;
+    //step = step % wrap;
+    //while(step < -wrap/2) step += wrap;
+    //while(step > wrap/2) step -= wrap;
+
     while(step > 0)
     {
         elem = elem.next;
@@ -126,28 +135,26 @@ const step_by = (elem: Element, step: number) : Element =>
     return elem;
 }
 
-const mix_step = (seq: Sequence, v: number) : void =>
+const mix_step = (seq: Sequence, elem: Element) : void =>
 {
-    const elem = seq.lookup.get(v);
-    if(elem === undefined) throw "zomg4";
     let position = delink(elem);
     
-    position = step_by(position, v);
+    position = step_by(seq, position, elem.value);
 
     link(position, elem);
 }
 
 
 
-const part1_score = (seq: Sequence) =>
+const score = (seq: Sequence) =>
 {
-    let elem0 = seq.lookup.get(0);
+    let elem0 = seq.zero_element;
     if(elem0 === undefined) throw "zomg10";
 
     return (
-        step_by(elem0, 1000).value + 
-        step_by(elem0, 2000).value + 
-        step_by(elem0, 3000).value);
+        step_by(seq, elem0, 1000).value + 
+        step_by(seq, elem0, 2000).value + 
+        step_by(seq, elem0, 3000).value);
 }
 
 const mix_round = (seq: Sequence) =>
@@ -157,23 +164,32 @@ const mix_round = (seq: Sequence) =>
     {
 
         mix_step(seq, elem);
-        //console.log("mixed", elem, JSON.stringify(to_arr(seq)))
+        //console.log("mixed", elem.value, JSON.stringify(to_arr(seq)))
     }
     validate_sequence(seq);
 }
 
 const part1 = (rawInput: string) => {
-    const seq = parseInput(rawInput);
+    const ints = parseInput(rawInput);
+    const seq = to_sequence(ints);
 
     mix_round(seq);
 
-    return part1_score(seq); //11388 was too low, -8373 also wrong
+    return score(seq);
 };
 
 const part2 = (rawInput: string) => {
-    const input = parseInput(rawInput);
+    const ints = parseInput(rawInput).map(v => v * 811589153);
+    const seq = to_sequence(ints);
 
-    return;
+    console.log(JSON.stringify(to_arr(seq)));
+    for(let i = 0; i < 10; ++i)
+    {
+        mix_round(seq);
+        console.log("after round", i, JSON.stringify(to_arr(seq)));
+    }
+
+    return score(seq);
 };
 
 run({
@@ -194,10 +210,16 @@ run({
     },
     part2: {
         tests: [
-            //{
-            //    input: ``,
-            //    expected: "",
-            //},
+            {
+                input: `1
+                2
+                -3
+                3
+                -2
+                0
+                4`,
+                expected: 1623178306,
+            },
         ],
         solution: part2,
     },
