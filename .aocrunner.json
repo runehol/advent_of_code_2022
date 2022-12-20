@@ -289,20 +289,20 @@
     {
       "part1": {
         "solved": true,
-        "result": "497",
+        "result": "11616",
         "attempts": [
           "11388",
           "-8373"
         ],
-        "time": 33.342458
+        "time": 30.225292
       },
       "part2": {
-        "solved": false,
-        "result": null,
+        "solved": true,
+        "result": "9937909178485",
         "attempts": [
           "15929871895084"
         ],
-        "time": null
+        "time": 356.979167
       }
     },
     {

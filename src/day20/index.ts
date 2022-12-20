@@ -114,13 +114,12 @@ const to_arr = (seq: Sequence) : number[] =>
     return to_arr_elem(seq.zero_element);
 }
 
-const step_by = (seq: Sequence, elem: Element, step: number) : Element =>
+const step_by = (elem: Element, step: number, wrap: number) : Element =>
 {
     
-    const wrap = seq.len;
-    //step = step % wrap;
-    //while(step < -wrap/2) step += wrap;
-    //while(step > wrap/2) step -= wrap;
+    step = step % wrap;
+    while(step < -wrap/2) step += wrap;
+    while(step > wrap/2) step -= wrap;
 
     while(step > 0)
     {
@@ -139,7 +138,7 @@ const mix_step = (seq: Sequence, elem: Element) : void =>
 {
     let position = delink(elem);
     
-    position = step_by(seq, position, elem.value);
+    position = step_by(position, elem.value, seq.len-1);
 
     link(position, elem);
 }
@@ -152,19 +151,17 @@ const score = (seq: Sequence) =>
     if(elem0 === undefined) throw "zomg10";
 
     return (
-        step_by(seq, elem0, 1000).value + 
-        step_by(seq, elem0, 2000).value + 
-        step_by(seq, elem0, 3000).value);
+        step_by(elem0, 1000, seq.len).value + 
+        step_by(elem0, 2000, seq.len).value + 
+        step_by(elem0, 3000, seq.len).value);
 }
 
 const mix_round = (seq: Sequence) =>
 {
-    //console.log(JSON.stringify(to_arr(seq)));
     for(let elem of seq.values)
     {
 
         mix_step(seq, elem);
-        //console.log("mixed", elem.value, JSON.stringify(to_arr(seq)))
     }
     validate_sequence(seq);
 }
@@ -182,11 +179,9 @@ const part2 = (rawInput: string) => {
     const ints = parseInput(rawInput).map(v => v * 811589153);
     const seq = to_sequence(ints);
 
-    console.log(JSON.stringify(to_arr(seq)));
     for(let i = 0; i < 10; ++i)
     {
         mix_round(seq);
-        console.log("after round", i, JSON.stringify(to_arr(seq)));
     }
 
     return score(seq);
