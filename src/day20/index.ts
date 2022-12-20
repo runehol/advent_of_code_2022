@@ -1,13 +1,8 @@
 import run from "aocrunner";
 import { assert } from "console";
 import _ from 'lodash';
-import { isNativeError } from "util/types";
+import { integers_from_string } from '../utils/index.js'
 
-
-export const integers_from_string = (str: string) : number[] => {
-    const regexp = /-?\d+/g;
-    return [...str.matchAll(regexp)].map(m => parseInt(m[0]))
-}
 
 const parseInput = (rawInput: string) => 
 {
@@ -19,7 +14,6 @@ const mix_step = (arr:number[], elem: number) : number[] =>
     const pos = arr.indexOf(elem);
     assert(pos != -1);
     let adj_pos = (pos+elem+arr.length-1)%(arr.length-1);
-    if(adj_pos == 0) adj_pos = arr.length-1;
     if(adj_pos > pos)
     {
         //console.log("a", pos, adj_pos);
@@ -29,6 +23,18 @@ const mix_step = (arr:number[], elem: number) : number[] =>
         return arr.slice(0, adj_pos).concat(arr.slice(pos, pos+1), arr.slice(adj_pos, pos), arr.slice(pos+1))
     }
 }
+
+/*
+[0, adj_pos]
+[pos, pos+1]
+[adj_pos, pos]
+[pos+1, end]
+
+[0, pos]
+[pos+1, adj_pos]
+[pos, pos+1]
+[adj_pos, end]
+*/
 
 const part1_score = (arr: number[]) =>
 {
@@ -43,6 +49,7 @@ const part1_score = (arr: number[]) =>
 
 const mix_round = (arr: number[], order: number[]) : number[] =>
 {
+    //console.log(JSON.stringify(arr));
     for(let elem of order)
     {
         //console.log("mixing", elem, arr)
