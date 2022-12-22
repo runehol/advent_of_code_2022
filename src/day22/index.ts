@@ -245,7 +245,7 @@ const next_pos_and_tile_cube : NextPosAndTile = (pos:PositionDir, board:Board) :
         {
             //A -> E
             p = shift_tile(-2, 2, rotate_180(pos))
-        } else if(pos.x == side && pos.y >= side && pos.x < 2*side)
+        } else if(pos.x == side && pos.y >= side && pos.y < 2*side)
         {
             //B -> E
             p = shift_tile(-1, 0, rotate_left(pos))
@@ -280,7 +280,12 @@ const next_pos_and_tile_cube : NextPosAndTile = (pos:PositionDir, board:Board) :
 
     if(!pos_eq(p, pos))
     {
-        console.log(pos, p, next);
+        if(lookup(p, board) !== " ")
+        {
+            console.log(pos, p, next);
+            throw "problem in navigation";
+        }
+        //console.log(pos, p, next);
         //draw_board(board, [pos, next]);
         //console.log("\n\n\n");
     }
