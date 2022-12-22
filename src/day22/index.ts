@@ -71,6 +71,39 @@ const step_one = (pos:PositionDir, board:Board, next_pos_and_tile: NextPosAndTil
 }
 
 
+const draw_board = (board: Board, trace: PositionDir[]) => 
+{
+    const crumbs = new Map<string, string>();
+    trace.forEach(t => {
+        let c = " ";
+        switch(t.dir)
+        {
+        case 0:
+            c = '>';
+            break;
+        case 1:
+            c = 'v';
+            break;
+        case 2:
+            c = '<';
+            break;
+        case 3:
+            c = '^';
+            break;
+        }
+        crumbs.set(t.x + "_" + t.y, c);
+    });
+
+    let text = _.range(0, board.height).map(y => _.range(0, board.width).map(x => {
+        let c = crumbs.get(x + "_" + y);
+        if(c === undefined)
+        {
+            c = lookup({x, y}, board);
+        }
+        return c;
+    }).join("")).join("\n");
+    console.log(text);
+}
 
 
 const parseInput = (rawInput: string) : [Board, Command[]] => 
@@ -91,41 +124,47 @@ const parseInput = (rawInput: string) : [Board, Command[]] =>
     return [{ lines: map, height, width, side:50}, commands];
 }
 
-const move = (pos:PositionDir, cmd:Command, board:Board, next_pos_and_tile: NextPosAndTile) : PositionDir =>
+const move = (pos:PositionDir, cmd:Command, board:Board, next_pos_and_tile: NextPosAndTile, trace: PositionDir[]) : PositionDir =>
 {
     if(cmd === 'L')
     {
+        trace.push(pos);
         const dir = ((pos.dir+3)%4) as Direction;
         return {x:pos.x, y:pos.y, dir}
     } else if(cmd === 'R')
     {
+        trace.push(pos);
         const dir = ((pos.dir+1)%4) as Direction;
         return {x:pos.x, y:pos.y, dir}
     } else {
         for(let i = 0; i < cmd; ++i)
         {
+            trace.push(pos);
             pos = step_one(pos, board, next_pos_and_tile);
         }
         return pos;
     }
 }
 
-const move_sequence = (pos:PositionDir, cmds:Command[], board:Board, next_pos_and_tile: NextPosAndTile)  : PositionDir =>
+const move_sequence = (pos:PositionDir, cmds:Command[], board:Board, next_pos_and_tile: NextPosAndTile, trace: PositionDir[])  : PositionDir =>
 {
     cmds.forEach(cmd => {
-        pos = move(pos, cmd, board, next_pos_and_tile);
+        pos = move(pos, cmd, board, next_pos_and_tile, trace);
     });
+    trace.push(pos);
     return pos;
 }
 
 const part1 = (rawInput: string) => {
     const [board, commands] = parseInput(rawInput);
     const initial_pos = step_one({x:0, y:0, dir:0}, board, next_pos_and_tile_flat);
-    const final_pos = move_sequence(initial_pos, commands, board, next_pos_and_tile_flat)
+    let trace: PositionDir[] = []
+    const final_pos = move_sequence(initial_pos, commands, board, next_pos_and_tile_flat, trace)
     return (final_pos.y+1)*1000 + (final_pos.x+1)*4 + final_pos.dir;
 };
 
 const pos_eq = (a:PositionDir, b:PositionDir): boolean => a.x === b.x && a.y === b.y && a.dir === b.dir;
+
 
 const next_pos_and_tile_cube : NextPosAndTile = (pos:PositionDir, board:Board) : [PositionDir, string] =>
 {
@@ -239,6 +278,13 @@ const next_pos_and_tile_cube : NextPosAndTile = (pos:PositionDir, board:Board) :
 
     let next = iterate_pos_one(p);
 
+    if(!pos_eq(p, pos))
+    {
+        console.log(pos, p, next);
+        //draw_board(board, [pos, next]);
+        //console.log("\n\n\n");
+    }
+
     let v = lookup(next, board);
     if(v == ' ')
     {
@@ -251,8 +297,10 @@ const next_pos_and_tile_cube : NextPosAndTile = (pos:PositionDir, board:Board) :
 
 const part2 = (rawInput: string) => {
     const [board, commands] = parseInput(rawInput);
-    const initial_pos = {x:50, y:0, dir:0};
-    const final_pos = move_sequence(initial_pos, commands, board, next_pos_and_tile_cube)
+    const initial_pos : PositionDir = {x:50, y:0, dir:0};
+    let trace: PositionDir[] = [];
+    const final_pos = move_sequence(initial_pos, commands, board, next_pos_and_tile_cube, trace)
+    //draw_board(board, trace);
     return (final_pos.y+1)*1000 + (final_pos.x+1)*4 + final_pos.dir;
 };
 
